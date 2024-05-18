@@ -9,11 +9,14 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infrastrucure", "infrastruc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebStore.Memory", "infrastructure\WebStore.Memory\WebStore.Memory.csproj", "{F3C27B31-F3A3-43B3-8B33-6ADA6760D77F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebStore", "domain\WebStore\WebStore.csproj", "{04450AF3-F57C-4244-AD31-71555B909F0D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebStore", "domain\WebStore\WebStore.csproj", "{04450AF3-F57C-4244-AD31-71555B909F0D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "presentation", "presentation", "{84C314CA-B119-4854-9877-A747978631CA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebStore.WebMVC", "presentation\WebStore.WebMVC\WebStore.WebMVC.csproj", "{84440959-52B7-403A-A643-D108D3AF48AC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebStore.WebMVC", "presentation\WebStore.WebMVC\WebStore.WebMVC.csproj", "{84440959-52B7-403A-A643-D108D3AF48AC}"
+	ProjectSection(ProjectDependencies) = postProject
+		{04450AF3-F57C-4244-AD31-71555B909F0D} = {04450AF3-F57C-4244-AD31-71555B909F0D}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

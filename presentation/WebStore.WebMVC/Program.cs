@@ -1,3 +1,5 @@
+using WebStore.Memory;
+
 namespace WebStore.WebMVC
 {
     public class Program
@@ -8,6 +10,7 @@ namespace WebStore.WebMVC
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            builder.Services.AddSingleton<IBookRepository, BookRepository>();
 
             var app = builder.Build();
 
