@@ -1,8 +1,7 @@
-﻿namespace WebStore;
-public class Book
+﻿namespace WebStore
 {
-    public int Id { get; }
-    public string Title { get; }
+    public class Class1
+    {
 
-    public Book(int id, string title) { (Id, Title) = (id, title); }
+    }
 }

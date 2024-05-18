@@ -5,24 +5,11 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "domain", "domain", "{FC20616F-3876-4A13-A9AC-25BF723BBD7E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebStore", "domain\webstore\WebStore.csproj", "{8053847C-F4BD-4AB4-8251-7F38A1CCADFE}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "infrastrucure", "infrastrucure", "{89F06674-18A1-4A1A-AA1A-AABA32C582D1}"
 EndProject
 Global
-	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{8053847C-F4BD-4AB4-8251-7F38A1CCADFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8053847C-F4BD-4AB4-8251-7F38A1CCADFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8053847C-F4BD-4AB4-8251-7F38A1CCADFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8053847C-F4BD-4AB4-8251-7F38A1CCADFE}.Release|Any CPU.Build.0 = Release|Any CPU
-	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{8053847C-F4BD-4AB4-8251-7F38A1CCADFE} = {FC20616F-3876-4A13-A9AC-25BF723BBD7E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {E3CAE2C4-0F5F-49F0-8716-B5B4C24D6F80}
