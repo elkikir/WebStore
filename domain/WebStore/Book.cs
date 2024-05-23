@@ -1,4 +1,6 @@
-﻿namespace WebStore
+﻿using System.Text.RegularExpressions;
+
+namespace WebStore
 {
     public class Book
     {
@@ -10,6 +12,13 @@
         public Book(int id, string isbn, string author,string title) 
         { 
             (Id, Isbn, Author, Title) = (id, isbn, author, title); 
+        }
+
+        internal static bool IsIsbn(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return false;
+            s = s.Replace(" ", "").Replace("-", "").ToUpper();
+            return Regex.IsMatch(s, @"^ISBN\d{10}(\d{3})?$");
         }
     }
 }
