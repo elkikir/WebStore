@@ -10,6 +10,14 @@ namespace WebStore.WebMVC
 
             // Add services to the container.
             builder.Services.AddControllersWithViews();
+            builder.Services.AddDistributedMemoryCache();
+            builder.Services.AddSession(options =>
+            {
+                options.IdleTimeout = TimeSpan.FromMinutes(20);
+                options.Cookie.HttpOnly = true; //доступ к куки только из сервера
+                options.Cookie.IsEssential = true; //некоммерческие куки, не требует согласие пользователя
+            });
+
             builder.Services.AddSingleton<IBookRepository, BookRepository>();
             builder.Services.AddSingleton<BookService>();
 
@@ -29,6 +37,8 @@ namespace WebStore.WebMVC
             app.UseRouting();
 
             app.UseAuthorization();
+
+            app.UseSession();
 
             app.MapControllerRoute(
                 name: "default",
