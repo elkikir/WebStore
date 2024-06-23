@@ -4,18 +4,14 @@ namespace WebStore.WebMVC.Models
 {
     public class Cart
     {
-        public IDictionary<int, int> Items { get; set; } = new Dictionary<int, int>();
-        public int Count()
+        public int OrderId { get; }
+        public int TotalCount { get; set; }
+        public decimal TotalPrice { get; set; }
+        public Cart(int orderId)
         {
-            int temp = 0;
-
-            foreach(var item in Items)
-            {
-                temp += item.Value;
-            }
-
-            return temp;
+            OrderId = orderId;
+            TotalCount = 0;
+            TotalPrice = 0m;
         }
-        public decimal Amount { get; set; }
     }
 }
