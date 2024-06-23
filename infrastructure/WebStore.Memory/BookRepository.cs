@@ -1,4 +1,5 @@
-﻿namespace WebStore.Memory
+﻿
+namespace WebStore.Memory
 {
     public class BookRepository : IBookRepository
     {
@@ -24,6 +25,14 @@
         public Book GetById(int id)
         {
             return books.Single(book => book.Id == id);
+        }
+
+        public Book[] GetAllById(IEnumerable<int> ids)
+        {
+            var foundBooks = from book in books
+                             join bookId in ids on book.Id equals bookId
+                             select book;
+            return foundBooks.ToArray();
         }
     }
 }
