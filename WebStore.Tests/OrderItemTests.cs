@@ -1,5 +1,4 @@
-﻿
-namespace WebStore.Tests
+﻿namespace WebStore.Tests
 {
     public class OrderItemTests
     {

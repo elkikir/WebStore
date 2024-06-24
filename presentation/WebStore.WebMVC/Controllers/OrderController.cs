@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Reflection;
 using WebStore.WebMVC.Models;
 
 namespace WebStore.WebMVC.Controllers
@@ -17,7 +16,7 @@ namespace WebStore.WebMVC.Controllers
 
         public IActionResult Index()
         {
-            if (HttpContext.Session.TryGetCart(out Cart cart))
+            if (HttpContext.Session.TryGetCart(out Cart cart) && cart.TotalCount > 0)
             {
                 var order = orderRepository.GetById(cart.OrderId);
                 OrderModel model = Map(order);
@@ -51,12 +50,11 @@ namespace WebStore.WebMVC.Controllers
             };
         }
 
-        public IActionResult AddItem(int id)
+        public (Cart, Order) GetOrCreateCartAndOrder()
         {
-            var book = bookRepository.GetById(id);
             Order order;
-            Cart cart;
-            if (HttpContext.Session.TryGetCart(out cart))
+
+            if (HttpContext.Session.TryGetCart(out Cart cart))
             {
                 order = orderRepository.GetById(cart.OrderId);
             }
@@ -66,15 +64,41 @@ namespace WebStore.WebMVC.Controllers
                 cart = new Cart(order.Id);
             }
 
-            order.AddItem(book, 1);
+            return (cart, order);
+        }
+
+        public void SaveOrderAndCart(Cart cart, Order order)
+        {
             orderRepository.Update(order);
 
             cart.TotalCount = order.TotalCount;
             cart.TotalPrice = order.TotalPrice;
 
             HttpContext.Session.Set(cart);
+        }
+
+        public IActionResult AddItem(int id)
+        {
+            (Cart cart, Order order) = GetOrCreateCartAndOrder();
+
+            var book = bookRepository.GetById(id);
+            order.AddItem(book);
+
+            SaveOrderAndCart(cart, order);
 
             return RedirectToAction("Index", "Book", new { id });
+        }
+
+        public IActionResult DeleteItem(int id)
+        {
+            (Cart cart, Order order) = GetOrCreateCartAndOrder();
+
+            var book = bookRepository.GetById(id);
+            order.DeleteItem(book);
+
+            SaveOrderAndCart(cart, order);
+
+            return RedirectToAction("Index", "Order");
         }
     }
 }

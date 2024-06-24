@@ -1,5 +1,4 @@
-﻿
-namespace WebStore
+﻿namespace WebStore
 {
     public interface IBookRepository
     {

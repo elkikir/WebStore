@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using WebStore.Memory;
 
 namespace WebStore.WebMVC.Controllers
 {

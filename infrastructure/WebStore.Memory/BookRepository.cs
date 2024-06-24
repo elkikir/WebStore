@@ -1,5 +1,4 @@
-﻿
-namespace WebStore.Memory
+﻿namespace WebStore.Memory
 {
     public class BookRepository : IBookRepository
     {

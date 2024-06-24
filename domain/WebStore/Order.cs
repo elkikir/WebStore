@@ -4,21 +4,12 @@
     {
         public int Id { get; }
 
-        private List<OrderItem> l_items;
-        public IReadOnlyCollection<OrderItem> Items 
-        {
-            get { return l_items; } 
-        }
+        private List<OrderItem> items;
+        public IReadOnlyCollection<OrderItem> Items => items;
 
-        public int TotalCount
-        {
-            get { return l_items.Sum(item => item.Count); }
-        }
+        public int TotalCount => items.Sum(item => item.Count);
 
-        public Decimal TotalPrice
-        {
-            get { return l_items.Sum(item => (decimal)item.Price * item.Count); }
-        }
+        public Decimal TotalPrice => items.Sum(item => (decimal)item.Price * item.Count);
 
         public Order(int id, IEnumerable<OrderItem> items)
         {
@@ -28,23 +19,36 @@
             }
 
             Id = id;
-            l_items = new List<OrderItem>(items);
+            this.items = new List<OrderItem>(items);
         }
 
-        public void AddItem(Book book, int count) 
-        { 
-            if(book == null)
-                throw new ArgumentNullException(nameof(book));
-            var item = l_items.SingleOrDefault(x => x.BookId == book.Id);
+        public OrderItem GetItem(int bookId)
+        {
+            return items.Single(item => item.BookId == bookId);
+        }
 
-            if (item == null)
-                l_items.Add(new OrderItem(book.Id, book.Price, count));
+        public void AddItem(Book book)
+        {
+            if (book == null)
+                throw new ArgumentNullException(nameof(book));
+            var index = items.FindIndex(item => item.BookId == book.Id);
+
+            if (index == -1)
+                items.Add(new OrderItem(book.Id, book.Price, count: 1));
             else
             {
-                l_items.Remove(item);
-                l_items.Add(new OrderItem(book.Id, item.Price, count + item.Count)); //test
+                items[index].Count++;
             }
+        }
 
+        public void DeleteItem(Book book)
+        {
+            if (book == null)
+                throw new ArgumentNullException(nameof(book));
+
+            var item = items.SingleOrDefault(x => x.BookId == book.Id);
+            if (!items.Remove(item))
+                throw (new ArgumentException("Book must be exist in order", nameof(item)));
         }
     }
 }
