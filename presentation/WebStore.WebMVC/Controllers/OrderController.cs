@@ -1,4 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using NPoco.Expressions;
+using System.Text.RegularExpressions;
+using Umbraco.Core.Services.Implement;
 using WebStore.WebMVC.Models;
 
 namespace WebStore.WebMVC.Controllers
@@ -7,11 +10,13 @@ namespace WebStore.WebMVC.Controllers
     {
         private readonly IBookRepository bookRepository;
         private readonly IOrderRepository orderRepository;
+        private readonly NotificationService notificationService;
 
-        public OrderController(IBookRepository bookRepository, IOrderRepository orderRepository)
+        public OrderController(IBookRepository bookRepository, IOrderRepository orderRepository, NotificationService notificationService)
         {
             this.orderRepository = orderRepository;
             this.bookRepository = bookRepository;
+            this.notificationService = notificationService;
         }
 
         public IActionResult Index()
@@ -89,7 +94,7 @@ namespace WebStore.WebMVC.Controllers
             return RedirectToAction("Index", "Book", new { id });
         }
 
-        public IActionResult UpdateItem(int id, int count)
+        public IActionResult UpdateItem(int id, int count) //написать тест
         {
             (Cart cart, Order order) = GetOrCreateCartAndOrder();
 
@@ -121,6 +126,32 @@ namespace WebStore.WebMVC.Controllers
             SaveOrderAndCart(cart, order);
 
             return RedirectToAction("Index", "Order");
+        }
+
+        public IActionResult SendConfirmationCode(int id, string cellPhone)
+        {
+            var order = orderRepository.GetById(id);
+            var model = Map(order);
+
+            if (!IsValidCellPhone(cellPhone))
+            {
+                model.Errors["cellPhone"] = "Номер телефона не соответствует";
+                return View("Index", model);
+            }
+
+            int code = 1111; //will be random(1000, 9999) soon
+            HttpContext.Session.SetInt32(cellPhone, code);
+            notificationService.SendConfirmationCode(order, code);
+
+            return View("Confirmation", new ConfirmationModel { CellPhone = cellPhone });
+        }
+
+        public bool IsValidCellPhone(string cellPhone)
+        {
+            Regex regex = new Regex(@"^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$");
+            if(regex.IsMatch(cellPhone))
+            return true;
+            return false;
         }
     }
 }
