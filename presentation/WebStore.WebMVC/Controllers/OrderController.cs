@@ -89,6 +89,28 @@ namespace WebStore.WebMVC.Controllers
             return RedirectToAction("Index", "Book", new { id });
         }
 
+        public IActionResult UpdateItem(int id, int count)
+        {
+            (Cart cart, Order order) = GetOrCreateCartAndOrder();
+
+            var book = bookRepository.GetById(id);
+            switch (order.GetItem(id).Count + count)
+            {
+                case int final when final > 0:
+                    order.AddItem(book, count);
+                    break;
+                case int final when final == 0:
+                    order.DeleteItem(book); 
+                    break;
+                case int final when final < 0:
+                    throw new InvalidOperationException("Попытка удаления объекта не находящегося в корзине");
+            }
+
+            SaveOrderAndCart(cart, order);
+
+            return RedirectToAction("Index", "Order");
+        }
+
         public IActionResult DeleteItem(int id)
         {
             (Cart cart, Order order) = GetOrCreateCartAndOrder();

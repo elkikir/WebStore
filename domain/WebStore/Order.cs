@@ -27,7 +27,7 @@
             return items.Single(item => item.BookId == bookId);
         }
 
-        public void AddItem(Book book)
+        public void AddItem(Book book, int count = 1)
         {
             if (book == null)
                 throw new ArgumentNullException(nameof(book));
@@ -37,7 +37,7 @@
                 items.Add(new OrderItem(book.Id, book.Price, count: 1));
             else
             {
-                items[index].Count++;
+                items[index].Count += count;
             }
         }
 
