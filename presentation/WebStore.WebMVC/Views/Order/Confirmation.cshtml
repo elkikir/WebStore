@@ -4,7 +4,30 @@
     ViewData["Title"] = "Подтверждение мобильного";
 }
 
-<h1>Подтверждение мобильного</h1>
+@if (Model.Errors.ContainsKey("fatal"))
+{
+    <h1 class="form-text text-danger">@Model.Errors["fatal"]</h1>
+    <form action="@Url.Action("Index","Home")" method="get">
+        <button type="submit" class="btn btn-success">Вернуться на главную страницу</button>
+    </form>
+}
+else
+{
+<h1>Подтверждение мобильного телефона</h1>
+
+<form action="@Url.Action("StartDelivery")" method="post">
+    <input type="hidden" name="id" value="@Model.OrderId" />
+    <input type="hidden" name="cellPhone" value="@Model.CellPhone" />
+    <div class="form-group">
+        <label for="code">Код подтверждения</label>
+        <input type="text" class="form-control" name="code" placeholder="0000" />
+        @if (Model.Errors.ContainsKey("code"))
+        {
+            <small class="form-text text-danger">@Model.Errors["code"]</small>
+        }
+    </div>
+    <button type="submit" class="btn btn-success">Проверить</button>
+</form>
 
 <form action="@Url.Action("SendConfirmationCode")" method="post">
     <input type="hidden" name="id" value="@Model.OrderId" />
@@ -12,5 +35,7 @@
         <label for="cellPhone">Мобильный телефон</label>
         <input type="text" class="form-controle" name="cellPhone" value="@Model.CellPhone" />
     </div>
-    <button class="btn btn-success" type="submit">Отправить код</button>
+    <input type="hidden" name="sendAgain" value="true" />
+    <button class="btn btn-success" type="submit">Повторнить</button>
 </form>
+}

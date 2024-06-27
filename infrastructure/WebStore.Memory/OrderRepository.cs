@@ -15,7 +15,10 @@
 
         public Order GetById(int id)
         {
-            return orders.Single(order => order.Id == id);
+            if (orders.Count > 0 && id > 0)
+                return orders.Single(order => order.Id == id);
+            else
+                return null;
         }
 
         public void Update(Order order)

@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using NPoco.Expressions;
 using System.Text.RegularExpressions;
-using Umbraco.Core.Services.Implement;
+using Umbraco.Core;
 using WebStore.WebMVC.Models;
 
 namespace WebStore.WebMVC.Controllers
@@ -19,6 +18,7 @@ namespace WebStore.WebMVC.Controllers
             this.notificationService = notificationService;
         }
 
+        [HttpGet]
         public IActionResult Index()
         {
             if (HttpContext.Session.TryGetCart(out Cart cart) && cart.TotalCount > 0)
@@ -55,7 +55,7 @@ namespace WebStore.WebMVC.Controllers
             };
         }
 
-        public (Cart, Order) GetOrCreateCartAndOrder()
+        private (Cart, Order) GetOrCreateCartAndOrder()
         {
             Order order;
 
@@ -72,7 +72,7 @@ namespace WebStore.WebMVC.Controllers
             return (cart, order);
         }
 
-        public void SaveOrderAndCart(Cart cart, Order order)
+        private void SaveOrderAndCart(Cart cart, Order order)
         {
             orderRepository.Update(order);
 
@@ -82,6 +82,7 @@ namespace WebStore.WebMVC.Controllers
             HttpContext.Session.Set(cart);
         }
 
+        [HttpPost]
         public IActionResult AddItem(int id)
         {
             (Cart cart, Order order) = GetOrCreateCartAndOrder();
@@ -94,9 +95,16 @@ namespace WebStore.WebMVC.Controllers
             return RedirectToAction("Index", "Book", new { id });
         }
 
+        [HttpPost]
         public IActionResult UpdateItem(int id, int count) //написать тест
         {
             (Cart cart, Order order) = GetOrCreateCartAndOrder();
+            if (order.TotalCount == 0)
+            {
+                var errorConfirmationModel = new ConfirmationModel();
+                errorConfirmationModel.Errors["fatal"] = "Время сессии истекло...";
+                return View("Confirmation", errorConfirmationModel);
+            }
 
             var book = bookRepository.GetById(id);
             switch (order.GetItem(id).Count + count)
@@ -105,7 +113,7 @@ namespace WebStore.WebMVC.Controllers
                     order.AddItem(book, count);
                     break;
                 case int final when final == 0:
-                    order.DeleteItem(book); 
+                    order.DeleteItem(book);
                     break;
                 case int final when final < 0:
                     throw new InvalidOperationException("Попытка удаления объекта не находящегося в корзине");
@@ -116,9 +124,16 @@ namespace WebStore.WebMVC.Controllers
             return RedirectToAction("Index", "Order");
         }
 
+        [HttpPost]
         public IActionResult DeleteItem(int id)
         {
             (Cart cart, Order order) = GetOrCreateCartAndOrder();
+            if (order.TotalCount == 0)
+            {
+                var errorConfirmationModel = new ConfirmationModel();
+                errorConfirmationModel.Errors["fatal"] = "Время сессии истекло...";
+                return View("Confirmation", errorConfirmationModel);
+            }
 
             var book = bookRepository.GetById(id);
             order.DeleteItem(book);
@@ -128,13 +143,36 @@ namespace WebStore.WebMVC.Controllers
             return RedirectToAction("Index", "Order");
         }
 
-        public IActionResult SendConfirmationCode(int id, string cellPhone)
+        [HttpPost]
+        public IActionResult SendConfirmationCode(int id, string cellPhone, bool sendAgain = false)
         {
             var order = orderRepository.GetById(id);
-            var model = Map(order);
+            var errorConfirmationModel = new ConfirmationModel();
 
+            if (order == null)
+            {
+                errorConfirmationModel.Errors["fatal"] = "Время сессии истекло...";
+                return View("Confirmation", errorConfirmationModel);
+            }
+
+            var model = Map(order);
+            if (cellPhone == null)
+            {
+                if (sendAgain)
+                {
+                    errorConfirmationModel.Errors["cellPhone"] = "Введите номер телефона";
+                    return View("Confirmation", errorConfirmationModel);
+                }
+                model.Errors["cellPhone"] = "Введите номер телефона";
+                return View("Index", model);
+            }
             if (!IsValidCellPhone(cellPhone))
             {
+                if (sendAgain)
+                {
+                    errorConfirmationModel.Errors["cellPhone"] = "Номер телефона не соответствует";
+                    return View("Confirmation", errorConfirmationModel);
+                }
                 model.Errors["cellPhone"] = "Номер телефона не соответствует";
                 return View("Index", model);
             }
@@ -143,15 +181,71 @@ namespace WebStore.WebMVC.Controllers
             HttpContext.Session.SetInt32(cellPhone, code);
             notificationService.SendConfirmationCode(order, code);
 
-            return View("Confirmation", new ConfirmationModel { CellPhone = cellPhone });
+            return View("Confirmation",
+                        new ConfirmationModel
+                        {
+                            OrderId = order.Id,
+                            CellPhone = cellPhone
+                        });
         }
 
         public bool IsValidCellPhone(string cellPhone)
         {
-            Regex regex = new Regex(@"^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$");
-            if(regex.IsMatch(cellPhone))
-            return true;
+            Regex regex = new Regex(@"^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$"); //поправить
+            if (regex.IsMatch(cellPhone))
+                return true;
             return false;
+        }
+
+        [HttpPost]
+        public IActionResult StartDelivery(int id, string cellPhone, int code)
+        {
+            int? storedCode = HttpContext.Session.GetInt32(cellPhone ?? "");
+            var confirmationModel = new ConfirmationModel();
+            if (storedCode == null)
+            {
+                confirmationModel.Errors["fatal"] = "Время сессии истекло...";
+                return View("Confirmation", confirmationModel);
+            }
+
+            if (code.Equals(null))
+            {
+                return View("Confirmation",
+                    new ConfirmationModel
+                    {
+                        OrderId = id,
+                        CellPhone = cellPhone,
+                        Errors = new Dictionary<string, string>
+                                 { { "code", "Поле кода не заполненно" } }
+                    });
+            }
+
+            if (code < 1000)
+            {
+                return View("Confirmation",
+                    new ConfirmationModel
+                    {
+                        OrderId = id,
+                        CellPhone = cellPhone,
+                        Errors = new Dictionary<string, string>
+                                 { { "code", "Поле кода заполненно неверно" } }
+                    });
+            }
+
+            if (storedCode.Value != code)
+            {
+                return View("Confirmation",
+                    new ConfirmationModel
+                    {
+                        OrderId = id,
+                        CellPhone = cellPhone,
+                        Errors = new Dictionary<string, string>
+                                 { { "code", "Неверный код" } }
+                    });
+            }
+
+            //
+            return View();
         }
     }
 }
