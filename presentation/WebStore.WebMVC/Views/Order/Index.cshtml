@@ -44,8 +44,9 @@
                 </td>
                 <td class="text-right">@Model.Item[i].Price</td>
                 <td>
-                    <form action="@Url.Action("DeleteItem", "Order")" method="post">
+                    <form action="@Url.Action("UpdateItem", "Order")" method="post">
                         <input type="hidden" name="id" value="@Model.Item[i].BookId" />
+                        <input type="hidden" name="count" value="0" />
                         <button class="btn btn-danger" type="submit">Удалить</button>
                     </form>
                 </td>
@@ -61,16 +62,8 @@
         </tr>
     </tfoot>
 </table>
-
-<form action="@Url.Action("SendConfirmationCode", "Order")" method="post">
-    <input type="hidden" name="id" value="@Model.Id" />
-    <div class="form-group">
-        <label for="cellPhone">Мобильный телефон</label>
-        <input type="text" class="form-controle" name="cellPhone" placeholder="+79876543210" />
-        @if (Model.Errors.ContainsKey("cellPhone"))
-        {
-            <small class="form-text text-danger">@Model.Errors["cellPhone"]</small>
-        }
-    </div>
-    <button class="btn btn-success" type="submit">Отправить код</button>
+<form action="@Url.Action("Confirmation", "Order")" method="post">
+        <input type="hidden" name="id" value="@Model.Id" />
+        <button class="btn btn-success" type="submit">Сделать заказ</button>
 </form>
+

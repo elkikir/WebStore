@@ -6,16 +6,16 @@
 
 <h1>Результаты поиска</h1>
 
-@if (Model.Length == 0)
+@if (Model.Length != 0)
 {
-    <p>Ничего не найдено</p>
+    <ul>
+        @foreach (var book in Model)
+        {
+            <li><a href="@Url.Action("index", "Book", new {id = book.Id})">@book.Title</a></li>
+        }
+    </ul>
 }
 else
 {
-    <ul>
-    @foreach (var book in Model)
-    {
-        <li><a href="@Url.Action("index", "Book", new {id = book.Id})">@book.Title</a></li>
-    }
-</ul>
+    <p>Ничего не найдено</p>
 }

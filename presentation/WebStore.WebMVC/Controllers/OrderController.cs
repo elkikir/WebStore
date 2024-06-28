@@ -96,102 +96,99 @@ namespace WebStore.WebMVC.Controllers
         }
 
         [HttpPost]
-        public IActionResult UpdateItem(int id, int count) //написать тест
+        public IActionResult UpdateItem(int id, int count)
         {
             (Cart cart, Order order) = GetOrCreateCartAndOrder();
-            if (order.TotalCount == 0)
-            {
-                var errorConfirmationModel = new ConfirmationModel();
-                errorConfirmationModel.Errors["fatal"] = "Время сессии истекло...";
-                return View("Confirmation", errorConfirmationModel);
-            }
 
             var book = bookRepository.GetById(id);
-            switch (order.GetItem(id).Count + count)
+
+            try
             {
-                case int final when final > 0:
+                if (count > 0)
                     order.AddItem(book, count);
-                    break;
-                case int final when final == 0:
+                else if (order.Items.Count == 0) //попытка удаления товаров из пустой корзины
+                {
+                    return View("Error", new ErrorViewModel
+                    {
+                        Errors = new Dictionary<string, string>
+                                 { { "fatal", "Время сессии истекло" } }
+                    });
+                }
+                else if (count < 0)
+                    order.RemoveItem(book, count);
+                else
                     order.DeleteItem(book);
-                    break;
-                case int final when final < 0:
-                    throw new InvalidOperationException("Попытка удаления объекта не находящегося в корзине");
             }
-
-            SaveOrderAndCart(cart, order);
-
-            return RedirectToAction("Index", "Order");
-        }
-
-        [HttpPost]
-        public IActionResult DeleteItem(int id)
-        {
-            (Cart cart, Order order) = GetOrCreateCartAndOrder();
-            if (order.TotalCount == 0)
+            catch (Exception ex)
             {
-                var errorConfirmationModel = new ConfirmationModel();
-                errorConfirmationModel.Errors["fatal"] = "Время сессии истекло...";
-                return View("Confirmation", errorConfirmationModel);
+                return RedirectToAction("Index", "Order");
             }
-
-            var book = bookRepository.GetById(id);
-            order.DeleteItem(book);
 
             SaveOrderAndCart(cart, order);
 
             return RedirectToAction("Index", "Order");
         }
 
+        public IActionResult Confirmation(int id)
+        {
+            if (orderRepository.GetById(id) == null)
+            {
+                return View("Error", new ErrorViewModel
+                {
+                    Errors = new Dictionary<string, string>
+                                 { { "fatal", "Время сессии истекло" } }
+                });
+            }
+
+            return View("Confirmation",
+                        new ConfirmationModel
+                        {
+                            OrderId = id,
+                            CellPhone = null
+                        });
+        }
+
         [HttpPost]
-        public IActionResult SendConfirmationCode(int id, string cellPhone, bool sendAgain = false)
+        public IActionResult SendConfirmationCode(int id, string cellPhone)
         {
             var order = orderRepository.GetById(id);
-            var errorConfirmationModel = new ConfirmationModel();
+            var model = new ConfirmationModel
+            {
+                OrderId = id,
+                CellPhone = cellPhone
+            };
 
             if (order == null)
             {
-                errorConfirmationModel.Errors["fatal"] = "Время сессии истекло...";
-                return View("Confirmation", errorConfirmationModel);
+                return View("Error", new ErrorViewModel
+                {
+                    Errors = new Dictionary<string, string>
+                                 { { "fatal", "Время сессии истекло" } }
+                });
             }
 
-            var model = Map(order);
             if (cellPhone == null)
             {
-                if (sendAgain)
-                {
-                    errorConfirmationModel.Errors["cellPhone"] = "Введите номер телефона";
-                    return View("Confirmation", errorConfirmationModel);
-                }
-                model.Errors["cellPhone"] = "Введите номер телефона";
-                return View("Index", model);
+                model.Errors["phone"] = "Введите номер телефона";
+                return View("Confirmation", model);
             }
             if (!IsValidCellPhone(cellPhone))
             {
-                if (sendAgain)
-                {
-                    errorConfirmationModel.Errors["cellPhone"] = "Номер телефона не соответствует";
-                    return View("Confirmation", errorConfirmationModel);
-                }
-                model.Errors["cellPhone"] = "Номер телефона не соответствует";
-                return View("Index", model);
+                model.Errors["phone"] = "Номер телефона не соответствует";
+                return View("Confirmation", model);
             }
 
             int code = 1111; //will be random(1000, 9999) soon
             HttpContext.Session.SetInt32(cellPhone, code);
             notificationService.SendConfirmationCode(order, code);
 
-            return View("Confirmation",
-                        new ConfirmationModel
-                        {
-                            OrderId = order.Id,
-                            CellPhone = cellPhone
-                        });
+            return View("Confirmation", model);
         }
 
         public bool IsValidCellPhone(string cellPhone)
         {
-            Regex regex = new Regex(@"^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$"); //поправить
+            Regex regex = 
+                new Regex(@"^((8|\+374|\+994|\+995|\+375|\+7|\+380|\+38|\+996|\+998|\+993)[\- ]?)?\(?\d{3,5}\)?[\- ]?\d{1}[\- ]?\d{1}[\- ]?\d{1}[\- ]?\d{1}[\- ]?\d{1}(([\- ]?\d{1})?[\- ]?\d{1})?$");
             if (regex.IsMatch(cellPhone))
                 return true;
             return false;
@@ -201,14 +198,17 @@ namespace WebStore.WebMVC.Controllers
         public IActionResult StartDelivery(int id, string cellPhone, int code)
         {
             int? storedCode = HttpContext.Session.GetInt32(cellPhone ?? "");
-            var confirmationModel = new ConfirmationModel();
+
             if (storedCode == null)
             {
-                confirmationModel.Errors["fatal"] = "Время сессии истекло...";
-                return View("Confirmation", confirmationModel);
+                return View("Error", new ErrorViewModel
+                {
+                    Errors = new Dictionary<string, string>
+                                 { { "fatal", "Время сессии истекло" } }
+                });
             }
 
-            if (code.Equals(null))
+            if (code == 0)
             {
                 return View("Confirmation",
                     new ConfirmationModel
@@ -216,7 +216,7 @@ namespace WebStore.WebMVC.Controllers
                         OrderId = id,
                         CellPhone = cellPhone,
                         Errors = new Dictionary<string, string>
-                                 { { "code", "Поле кода не заполненно" } }
+                                 { { "code", "Введите код" } }
                     });
             }
 
@@ -228,7 +228,7 @@ namespace WebStore.WebMVC.Controllers
                         OrderId = id,
                         CellPhone = cellPhone,
                         Errors = new Dictionary<string, string>
-                                 { { "code", "Поле кода заполненно неверно" } }
+                                 { { "code", "Поле кода заполнено некорректно" } }
                     });
             }
 

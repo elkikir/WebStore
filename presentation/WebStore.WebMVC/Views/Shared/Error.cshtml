@@ -4,7 +4,7 @@
 }
 
 <h1 class="text-danger">Ошибка.</h1>
-<h2 class="text-danger">При оброботке запроса произошла ошибка.</h2>
+<h2 class="text-danger">@Model.Errors["fatal"]</h2>
 
 @if (Model.ShowRequestId)
 {
@@ -12,3 +12,7 @@
         <strong>Request ID:</strong> <code>@Model.RequestId</code>
     </p>
 }
+
+<form action="@Url.Action("Index", "Home")" method="get">
+    <button class="btn btn-outline-success" type="submit">На главную</button>
+</form>

@@ -41,6 +41,20 @@
             }
         }
 
+        public void RemoveItem(Book book, int count)
+        {
+            if (book == null)
+                throw new ArgumentNullException(nameof(book));
+            var index = items.FindIndex(item => item.BookId == book.Id);
+
+            if (index == -1)
+                throw (new ArgumentException("Book must be exist in order", nameof(book)));
+            else if (items[index].Count + count <= 0)
+                DeleteItem(book);
+            else
+                items[index].Count += count;
+        }
+
         public void DeleteItem(Book book)
         {
             if (book == null)
@@ -48,7 +62,7 @@
 
             var item = items.SingleOrDefault(x => x.BookId == book.Id);
             if (!items.Remove(item))
-                throw (new ArgumentException("Book must be exist in order", nameof(item)));
+                throw (new ArgumentException("Book must be exist in order", nameof(book)));
         }
     }
 }
