@@ -6,5 +6,7 @@
         public OrderItemModel[] Item { get; set; } = new OrderItemModel[0];
         public int TotalCount {  get; set; }
         public decimal TotalPrice { get; set; }
+
+        public Dictionary<string, string> Errors = new Dictionary<string, string>();
     }
 }

@@ -13,6 +13,9 @@ namespace WebStore.WebMVC.Controllers
 
         public IActionResult Index(string query)
         {
+            if (query == null)
+                return View(new Book[0]);
+
             var book = bookService.GetAllByQuery(query);
 
             return View(book);

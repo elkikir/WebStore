@@ -21,6 +21,7 @@ namespace WebStore.WebMVC
             builder.Services.AddSingleton<IBookRepository, BookRepository>();
             builder.Services.AddSingleton<IOrderRepository, OrderRepository>();
             builder.Services.AddSingleton<BookService>();
+            builder.Services.AddSingleton<NotificationService>();
 
             var app = builder.Build();
 

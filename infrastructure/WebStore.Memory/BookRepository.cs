@@ -23,7 +23,7 @@
 
         public Book GetById(int id)
         {
-            return books.Single(book => book.Id == id);
+            return _ = books.Single(book => book.Id == id) ?? null;
         }
 
         public Book[] GetAllById(IEnumerable<int> ids)
