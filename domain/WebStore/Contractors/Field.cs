@@ -1,0 +1,43 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace WebStore.Contractors
+{
+    public abstract class Field
+    {
+        public string Label {  get; }
+
+        public string Name { get; }
+
+        public string Value {  get; }
+        
+        protected Field(string label, string name, string value) 
+        {
+            Label = label;
+            Name = name;
+            Value = value;
+        }
+    }
+
+    public class HiddenField : Field
+    {
+        public HiddenField(string label, string name, string value) 
+            : base(label, name, value) 
+        { 
+        }
+    }
+
+    public class SelectedField : Field
+    {
+        public IReadOnlyDictionary<string, string> Items { get; }
+
+        public SelectedField(string label, string name, string value, IReadOnlyDictionary<string, string> items) 
+            : base(label, name, value)
+        {
+            Items = items;
+        }
+    }
+}

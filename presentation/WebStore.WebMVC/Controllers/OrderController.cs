@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System.Text.RegularExpressions;
 using Umbraco.Core;
+using WebStore.Contractors;
 using WebStore.WebMVC.Models;
 
 namespace WebStore.WebMVC.Controllers
@@ -9,12 +10,15 @@ namespace WebStore.WebMVC.Controllers
     {
         private readonly IBookRepository bookRepository;
         private readonly IOrderRepository orderRepository;
+        private readonly IEnumerable<IDeliveryService> deliveryServices;
         private readonly NotificationService notificationService;
 
-        public OrderController(IBookRepository bookRepository, IOrderRepository orderRepository, NotificationService notificationService)
+        public OrderController(IBookRepository bookRepository, IOrderRepository orderRepository,
+            IEnumerable<IDeliveryService> deliveryServices, NotificationService notificationService)
         {
             this.orderRepository = orderRepository;
             this.bookRepository = bookRepository;
+            this.deliveryServices = deliveryServices;
             this.notificationService = notificationService;
         }
 
@@ -187,7 +191,7 @@ namespace WebStore.WebMVC.Controllers
 
         public bool IsValidCellPhone(string cellPhone)
         {
-            Regex regex = 
+            Regex regex =
                 new Regex(@"^((8|\+374|\+994|\+995|\+375|\+7|\+380|\+38|\+996|\+998|\+993)[\- ]?)?\(?\d{3,5}\)?[\- ]?\d{1}[\- ]?\d{1}[\- ]?\d{1}[\- ]?\d{1}[\- ]?\d{1}(([\- ]?\d{1})?[\- ]?\d{1})?$");
             if (regex.IsMatch(cellPhone))
                 return true;
@@ -195,7 +199,7 @@ namespace WebStore.WebMVC.Controllers
         }
 
         [HttpPost]
-        public IActionResult StartDelivery(int id, string cellPhone, int code)
+        public IActionResult Confirmate(int id, string cellPhone, int code)
         {
             int? storedCode = HttpContext.Session.GetInt32(cellPhone ?? "");
 
@@ -244,8 +248,44 @@ namespace WebStore.WebMVC.Controllers
                     });
             }
 
-            //
-            return View();
+            //todo: save telephone 
+
+            HttpContext.Session.Remove(cellPhone);
+
+            var model = new DeliveryModel
+            {
+                OrderId = id,
+                Methods = deliveryServices.ToDictionary(service => service.UniqueCode,
+                                                        service => service.Title)
+            };
+
+            return View("DeliveryMethod", model);
+        }
+
+        [HttpPost]
+        public IActionResult StartDelivery(int id, string uniqueCode)
+        {
+            var deliveryService = deliveryServices.Single(service => service.UniqueCode == uniqueCode);
+            var order = orderRepository.GetById(id);
+
+            var form = deliveryService.CreateForm(order);
+
+            return View("DeliveryStep", form);
+        }
+
+        [HttpPost]
+        public IActionResult NextDelivery(int id, string uniqueCode, int step, Dictionary<string, string> values)
+        {
+            var deliveryService = deliveryServices.Single(service => service.UniqueCode == uniqueCode);
+
+            var form = deliveryService.MoveNext(id, step, values);
+
+            if(form.IsFinal)
+            {
+                return null;
+            }
+
+            return View("DeliveryStep", form);
         }
     }
 }

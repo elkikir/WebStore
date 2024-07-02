@@ -1,3 +1,4 @@
+using WebStore.Contractors;
 using WebStore.Memory;
 
 namespace WebStore.WebMVC
@@ -20,6 +21,7 @@ namespace WebStore.WebMVC
 
             builder.Services.AddSingleton<IBookRepository, BookRepository>();
             builder.Services.AddSingleton<IOrderRepository, OrderRepository>();
+            builder.Services.AddSingleton<IDeliveryService, PostamateDeliveryService>();
             builder.Services.AddSingleton<BookService>();
             builder.Services.AddSingleton<NotificationService>();
 
