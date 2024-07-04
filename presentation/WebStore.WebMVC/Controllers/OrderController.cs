@@ -11,14 +11,17 @@ namespace WebStore.WebMVC.Controllers
         private readonly IBookRepository bookRepository;
         private readonly IOrderRepository orderRepository;
         private readonly IEnumerable<IDeliveryService> deliveryServices;
+        private readonly IEnumerable<IPaymentService> paymentServices;
         private readonly NotificationService notificationService;
 
         public OrderController(IBookRepository bookRepository, IOrderRepository orderRepository,
-            IEnumerable<IDeliveryService> deliveryServices, NotificationService notificationService)
+            IEnumerable<IDeliveryService> deliveryServices, IEnumerable<IPaymentService> paymentServices, 
+            NotificationService notificationService)
         {
             this.orderRepository = orderRepository;
             this.bookRepository = bookRepository;
             this.deliveryServices = deliveryServices;
+            this.paymentServices = paymentServices;
             this.notificationService = notificationService;
         }
 
@@ -248,7 +251,9 @@ namespace WebStore.WebMVC.Controllers
                     });
             }
 
-            //todo: save telephone 
+            var order = orderRepository.GetById(id);
+            order.CellPhone = cellPhone;
+            orderRepository.Update(order);
 
             HttpContext.Session.Remove(cellPhone);
 
@@ -282,10 +287,58 @@ namespace WebStore.WebMVC.Controllers
 
             if(form.IsFinal)
             {
-                return null;
+                var order = orderRepository.GetById(id);
+                order.Delivery = deliveryService.CreateDelivery(form);
+                orderRepository.Update(order);
+
+                var model = new DeliveryModel
+                {
+                    OrderId = id,
+                    Methods = paymentServices.ToDictionary(service => service.UniqueCode,
+                                                           service => service.Title)
+                };
+
+                return View("PaymentMethod", model);
             }
 
             return View("DeliveryStep", form);
+        }
+
+        [HttpPost]
+        public IActionResult StartPayment(int id, string uniqueCode)
+        {
+            var paymentService = paymentServices.Single(service => service.UniqueCode == uniqueCode);
+            var order = orderRepository.GetById(id);
+
+            var form = paymentService.CreateForm(order);
+
+            return View("PaymentStep", form);
+        }
+
+        [HttpPost]
+        public IActionResult NextPayment(int id, string uniqueCode, int step, Dictionary<string, string> values)
+        {
+            var paymentService = paymentServices.Single(service => service.UniqueCode == uniqueCode);
+
+            var form = paymentService.MoveNext(id, step, values);
+
+            if (form.IsFinal)
+            {
+                var order = orderRepository.GetById(id);
+                order.Payment = paymentService.GetPayment(form);
+                orderRepository.Update(order);
+
+                return View("Finish");
+            }
+
+            return View("PaymentStep", form);
+        }
+
+        public IActionResult Finish()
+        {
+            //HttpContext.Session.RemoveCart();
+
+            return View();
         }
     }
 }

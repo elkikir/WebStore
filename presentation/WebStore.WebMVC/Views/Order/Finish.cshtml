@@ -1,0 +1,11 @@
+﻿@{
+    ViewData["Title"] = "Заказ оформлен";
+}
+<h1>
+    Заказ оформлен. Мы собираем его, чтобы передать в службу доставки.
+    Ждите СМС.
+</h1>
+
+<form action="@Url.Action("Index", "Home")" method="get">
+    <button class="btn btn-outline-success" type="submit">На главную</button>
+</form>

@@ -7,9 +7,16 @@
         private List<OrderItem> items;
         public IReadOnlyCollection<OrderItem> Items => items;
 
+        public string CellPhone { get; set; }
+
+        public OrderDelivery Delivery { get; set; }
+
+        public OrderPayment Payment { get; set; }
+
         public int TotalCount => items.Sum(item => item.Count);
 
-        public Decimal TotalPrice => items.Sum(item => (decimal)item.Price * item.Count);
+        public Decimal TotalPrice => items.Sum(item => (decimal)item.Price * item.Count) 
+                                     + (Delivery?.Amount ?? 0m);
 
         public Order(int id, IEnumerable<OrderItem> items)
         {
