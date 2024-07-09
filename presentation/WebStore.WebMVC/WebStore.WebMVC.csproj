@@ -9,6 +9,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\domain\WebStore\WebStore.csproj" />
     <ProjectReference Include="..\..\infrastructure\WebStore.Memory\WebStore.Memory.csproj" />
+    <ProjectReference Include="..\..\plugins\WebStore.YandexKassa\WebStore.YandexKassa.csproj" />
   </ItemGroup>
 
   <ItemGroup>
