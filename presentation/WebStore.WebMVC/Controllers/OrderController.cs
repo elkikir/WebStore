@@ -2,6 +2,7 @@
 using System.Text.RegularExpressions;
 using Umbraco.Core;
 using WebStore.Contractors;
+using WebStore.Web.Contractors;
 using WebStore.WebMVC.Models;
 
 namespace WebStore.WebMVC.Controllers
@@ -12,16 +13,18 @@ namespace WebStore.WebMVC.Controllers
         private readonly IOrderRepository orderRepository;
         private readonly IEnumerable<IDeliveryService> deliveryServices;
         private readonly IEnumerable<IPaymentService> paymentServices;
+        private readonly IEnumerable<IWebContractorService> webContractorsService;
         private readonly NotificationService notificationService;
 
         public OrderController(IBookRepository bookRepository, IOrderRepository orderRepository,
-            IEnumerable<IDeliveryService> deliveryServices, IEnumerable<IPaymentService> paymentServices, 
-            NotificationService notificationService)
+            IEnumerable<IDeliveryService> deliveryServices, IEnumerable<IPaymentService> paymentServices,
+            IEnumerable<IWebContractorService> webContractorServices, NotificationService notificationService)
         {
             this.orderRepository = orderRepository;
             this.bookRepository = bookRepository;
             this.deliveryServices = deliveryServices;
             this.paymentServices = paymentServices;
+            this.webContractorsService = webContractorServices;
             this.notificationService = notificationService;
         }
 
@@ -312,6 +315,10 @@ namespace WebStore.WebMVC.Controllers
 
             var form = paymentService.CreateForm(order);
 
+            var webContractorService = webContractorsService.SingleOrDefault(service => service.UniqueCode == uniqueCode);
+            if(webContractorService != null)
+                return Redirect(webContractorService.GetUri);
+
             return View("PaymentStep", form);
         }
 
@@ -328,7 +335,7 @@ namespace WebStore.WebMVC.Controllers
                 order.Payment = paymentService.GetPayment(form);
                 orderRepository.Update(order);
 
-                return View("Finish");
+                return Finish();
             }
 
             return View("PaymentStep", form);
@@ -336,9 +343,9 @@ namespace WebStore.WebMVC.Controllers
 
         public IActionResult Finish()
         {
-            //HttpContext.Session.RemoveCart();
+            HttpContext.Session.RemoveCart();
 
-            return View();
+            return View("Finish");
         }
     }
 }

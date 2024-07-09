@@ -26,8 +26,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\infrastructure\WebStore.Memory\WebStore.Memory.csproj" />
+    <ProjectReference Include="..\..\presentation\WebStore.Web.Contractors\WebStore.WebMVC.Contractors.csproj" />
+    <ProjectReference Include="..\..\presentation\WebStore.WebMVC\WebStore.WebMVC.csproj" />
     <ProjectReference Include="..\domain\WebStore\WebStore.csproj" />
     <ProjectReference Include="..\infrastructure\WebStore.Memory\WebStore.Memory.csproj" />
+    <ProjectReference Include="..\WebStore\WebStore.csproj" />
   </ItemGroup>
 
   <ItemGroup>
